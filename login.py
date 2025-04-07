@@ -3,8 +3,6 @@ from tkinter import messagebox
 import os
 import subprocess
 import sys
-import threading
-import platform
 
 USER_FILE = "users.txt"
 USER_DIR = "users"
@@ -84,20 +82,16 @@ class LoginScreen:
 
     def launch_desktop(self, username):
         desktop_script = os.path.join(os.path.dirname(__file__), "desktop.py")
-
-        if platform.system() == "Windows":
-            subprocess.Popen(["python", desktop_script, username], creationflags=subprocess.CREATE_NEW_CONSOLE)
-        else:
-            subprocess.Popen(["python3", desktop_script, username],
-                             stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL,
-                             stdin=subprocess.DEVNULL,
-                             start_new_session=True)
-
-        # Wait a bit for the desktop to appear then exit login.py
-        self.root.after(2000, lambda: sys.exit(0))
+        python_exec = "python3" if sys.platform != "win32" else "python"
+        try:
+            subprocess.Popen([python_exec, desktop_script, username])
+            # Delay closing login window by 2 seconds
+            self.root.after(2000, self.root.destroy)
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to launch desktop: {e}")
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = LoginScreen(root)
     root.mainloop()
+    

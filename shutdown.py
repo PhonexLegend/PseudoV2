@@ -1,8 +1,9 @@
 import tkinter as tk
 import time
 import os
-import signal
 import sys
+import signal
+import platform
 
 class ShutdownScreen:
     def __init__(self, root):
@@ -66,13 +67,17 @@ class ShutdownScreen:
         show_next()
 
     def terminate(self):
-        time.sleep(1)
-        # Kill the entire process group (not just this script)
-        os.killpg(os.getpgid(os.getpid()), signal.SIGTERM)
+        self.root.destroy()
+        time.sleep(0.5)
+
+        # Cross-platform force exit
+        if platform.system() == "Windows":
+            os.system("taskkill /F /PID " + str(os.getpid()))
+        else:
+            os.kill(os.getpid(), signal.SIGTERM)
+
 
 if __name__ == "__main__":
-    # Make sure this script runs in its own process group
-    os.setpgrp()
     root = tk.Tk()
     app = ShutdownScreen(root)
     root.mainloop()

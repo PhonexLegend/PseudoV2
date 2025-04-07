@@ -1,7 +1,7 @@
-# os.py
 import tkinter as tk
 from tkinter import messagebox
 import subprocess
+import sys
 
 class SplashScreen:
     def __init__(self, master):
@@ -66,8 +66,10 @@ class SplashScreen:
         exit_button.pack(pady=20)
 
     def boot_os(self):
-        self.master.destroy()
-        subprocess.run(["python3", "boot.py"])
+        # Launch boot.py asynchronously
+        subprocess.Popen([sys.executable, "boot.py"])
+        # Exit this screen after 2 seconds
+        self.master.after(2000, lambda: exit(0))
 
     def show_about(self):
         messagebox.showinfo("About", "Pseudo OS\nVersion 2.0\nDeveloped by PhonexLegend")

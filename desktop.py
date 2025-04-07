@@ -1,91 +1,103 @@
 import tkinter as tk
-from tkinter import messagebox
-import subprocess
 import time
 import os
+import subprocess
 import sys
-import datetime
+from datetime import datetime
 
-class DesktopShell:
+class Desktop:
     def __init__(self, root, username):
         self.root = root
         self.username = username
-        self.root.title("PseudoOS Desktop")
+        self.root.title(f"PseudoOS - {self.username}")
         self.root.attributes("-fullscreen", True)
         self.root.configure(bg="black")
+        self.root.option_add("*Font", ("Courier New", 14))
 
-        self.background = tk.Label(self.root, bg="black")
-        self.background.place(relwidth=1, relheight=1)
+        self.user_dir = os.path.join("users", self.username)
+        os.makedirs(self.user_dir, exist_ok=True)
 
         self.create_desktop_icons()
-
-        self.taskbar = tk.Frame(self.root, bg="#222", height=40)
-        self.taskbar.pack(side="bottom", fill="x")
-
-        self.clock_label = tk.Label(self.taskbar, fg="#0f0", bg="#222", font=("Courier New", 14))
-        self.clock_label.pack(side="right", padx=10)
-
-        self.date_label = tk.Label(self.taskbar, fg="#0f0", bg="#222", font=("Courier New", 14))
-        self.date_label.pack(side="right", padx=10)
-
+        self.create_taskbar()
         self.update_clock()
 
     def create_desktop_icons(self):
-        icons = [
-            ("My Computer", self.open_file_explorer),
-            ("Terminal", self.launch_terminal),
-            ("Notes", self.launch_notes),
-            ("Calculator", self.launch_calculator),
-            ("Snake Game", self.launch_snake),
-            ("Shutdown", self.shutdown_system)
-        ]
+        icon_frame = tk.Frame(self.root, bg="black")
+        icon_frame.pack(side="top", anchor="nw", padx=50, pady=30)
 
-        for i, (label, command) in enumerate(icons):
-            btn = tk.Button(
-                self.root,
-                text=label,
-                font=("Courier New", 14),
-                fg="#0f0",
-                bg="black",
-                activebackground="#111",
-                activeforeground="#0f0",
-                bd=0,
-                command=command
-            )
-            btn.place(x=40, y=40 + i * 80, width=160, height=60)
+        self.create_icon(icon_frame, "My Computer", self.launch_my_computer)
+        self.create_icon(icon_frame, "Calculator", self.launch_calculator)
+        self.create_icon(icon_frame, "Terminal", self.launch_terminal)
+        self.create_icon(icon_frame, "Notes", self.launch_notes)
+        self.create_icon(icon_frame, "Snake Game", self.launch_snake)
+        self.create_icon(icon_frame, "Pong Game", self.launch_pong)
+        self.create_icon(icon_frame, "Tetris", self.launch_tetris)  # ✅ Tetris added here
+
+    def create_icon(self, parent, name, command):
+        btn = tk.Button(parent, text=name, width=20, height=2, bg="black", fg="#00FF00",
+                        activebackground="black", activeforeground="#00FF00", command=command)
+        btn.pack(anchor="w", pady=10)
+
+    def create_taskbar(self):
+        self.taskbar = tk.Frame(self.root, bg="black")
+        self.taskbar.pack(side="bottom", fill="x")
+
+        self.shutdown_btn = tk.Button(self.taskbar, text="Shutdown", command=self.shutdown,
+                                      bg="black", fg="#00FF00", activebackground="black", activeforeground="#00FF00")
+        self.shutdown_btn.pack(side="left", padx=10, pady=5)
+
+        self.clock_label = tk.Label(self.taskbar, fg="#00FF00", bg="black")
+        self.clock_label.pack(side="right", padx=10)
 
     def update_clock(self):
-        now = datetime.datetime.now()
-        current_time = now.strftime("%H:%M:%S")
-        current_date = now.strftime("%A, %d %B %Y")
-        self.clock_label.config(text=current_time)
-        self.date_label.config(text=current_date)
+        now = datetime.now()
+        time_str = now.strftime("%A, %d %B %Y | %H:%M:%S")
+        self.clock_label.config(text=time_str)
         self.root.after(1000, self.update_clock)
 
-    def launch_calculator(self):
-        subprocess.Popen(["python3", "calculator.py", self.username])
+    # ------------------ LAUNCH METHODS ------------------
 
-    def launch_notes(self, file_path=None):
-        args = ["python3", "notes.py", self.username]
-        if file_path:
-            args.append(file_path)
-        subprocess.Popen(args)
+    def launch_script(self, script_name):
+        script_path = os.path.join(os.path.dirname(__file__), script_name)
+        python_exec = "python3" if sys.platform != "win32" else "python"
+        subprocess.Popen([python_exec, script_path, self.username])
+
+    def launch_my_computer(self):
+        self.launch_script("my_computer.py")
+
+    def launch_calculator(self):
+        self.launch_script("calculator.py")
 
     def launch_terminal(self):
-        subprocess.Popen(["python3", "terminal.py", self.username])
+        self.launch_script("terminal.py")
+
+    def launch_notes(self):
+        self.launch_script("notes.py")
 
     def launch_snake(self):
-        subprocess.Popen(["python3", "snake.py", self.username])
+        self.launch_script("snake.py")
 
-    def open_file_explorer(self):
-        subprocess.Popen(["python3", "my_computer.py", self.username])
+    def launch_pong(self):
+        self.launch_script("pong.py")
 
-    def shutdown_system(self):
-        subprocess.Popen(["python3", "shutdown.py", self.username])
-        self.root.after(2000, self.root.destroy)
+    def launch_tetris(self):  # ✅ Tetris launcher
+        self.launch_script("tetris.py")
+
+    # ------------------ SHUTDOWN ------------------
+
+    def shutdown(self):
+        shutdown_script = os.path.join(os.path.dirname(__file__), "shutdown.py")
+        python_exec = "python3" if sys.platform != "win32" else "python"
+        try:
+            subprocess.Popen([python_exec, shutdown_script])
+            self.root.after(2000, lambda: os._exit(0))  # Exit after 2 seconds
+        except Exception as e:
+            print(f"Shutdown failed: {e}")
+
+# ------------------ MAIN ------------------
 
 if __name__ == "__main__":
     username = sys.argv[1] if len(sys.argv) > 1 else "guest"
     root = tk.Tk()
-    app = DesktopShell(root, username)
+    app = Desktop(root, username)
     root.mainloop()

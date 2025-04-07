@@ -1,8 +1,9 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 import os
 import sys
 import subprocess
+import shutil
 
 class MyComputer:
     def __init__(self, root, username):
@@ -29,10 +30,16 @@ class MyComputer:
         self.path_label.pack(side="left", padx=20)
 
         back_btn = tk.Button(top, text="Back", command=self.go_back, bg="black", fg="#00FF00")
-        back_btn.pack(side="right", padx=20)
+        back_btn.pack(side="right", padx=10)
+
+        new_folder_btn = tk.Button(top, text="New Folder", command=self.create_folder, bg="black", fg="#00FF00")
+        new_folder_btn.pack(side="right", padx=10)
+
+        new_file_btn = tk.Button(top, text="New File", command=self.create_file, bg="black", fg="#00FF00")
+        new_file_btn.pack(side="right", padx=10)
 
         exit_btn = tk.Button(top, text="Exit", command=self.root.destroy, bg="black", fg="#00FF00")
-        exit_btn.pack(side="right")
+        exit_btn.pack(side="right", padx=10)
 
         self.content_frame = tk.Frame(self.root, bg="black")
         self.content_frame.pack(fill="both", expand=True)
@@ -53,19 +60,29 @@ class MyComputer:
 
         for item in items:
             full_path = os.path.join(self.current_path, item)
+            item_frame = tk.Frame(self.content_frame, bg="black")
+            item_frame.pack(fill="x", padx=40, pady=2)
+
             if os.path.isdir(full_path):
                 btn = tk.Button(
-                    self.content_frame, text=f"[Folder] {item}",
+                    item_frame, text=f"[Folder] {item}",
                     command=lambda p=full_path: self.open_folder(p),
                     fg="#00FF00", bg="black", anchor="w", relief="flat"
                 )
             else:
                 btn = tk.Button(
-                    self.content_frame, text=f"[File]   {item}",
+                    item_frame, text=f"[File]   {item}",
                     command=lambda p=full_path: self.open_file(p),
                     fg="#00FF00", bg="black", anchor="w", relief="flat"
                 )
-            btn.pack(fill="x", padx=40, pady=2)
+            btn.pack(side="left", fill="x", expand=True)
+
+            del_btn = tk.Button(
+                item_frame, text="Delete",
+                command=lambda p=full_path: self.delete_item(p),
+                fg="red", bg="black"
+            )
+            del_btn.pack(side="right")
 
     def open_folder(self, path):
         if not path.startswith(self.base_dir):
@@ -88,6 +105,51 @@ class MyComputer:
             subprocess.Popen(["python3", "notes.py", self.username, path])
         else:
             messagebox.showinfo("Info", "Only .txt files are supported.")
+
+    def delete_item(self, path):
+        if not path.startswith(self.base_dir):
+            messagebox.showwarning("Access Denied", "You cannot delete items outside your own user directory.")
+            return
+
+        confirm = messagebox.askyesno("Delete", f"Are you sure you want to delete:\n\n{os.path.basename(path)}?")
+        if confirm:
+            try:
+                if os.path.isdir(path):
+                    shutil.rmtree(path)
+                else:
+                    os.remove(path)
+                self.load_directory()
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not delete item:\n{e}")
+
+    def create_file(self):
+        name = simpledialog.askstring("New File", "Enter file name (.txt will be added):")
+        if name:
+            if not name.endswith(".txt"):
+                name += ".txt"
+            path = os.path.join(self.current_path, name)
+            if os.path.exists(path):
+                messagebox.showwarning("Exists", "A file/folder with this name already exists.")
+                return
+            try:
+                with open(path, "w") as f:
+                    f.write("")
+                self.load_directory()
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+
+    def create_folder(self):
+        name = simpledialog.askstring("New Folder", "Enter folder name:")
+        if name:
+            path = os.path.join(self.current_path, name)
+            if os.path.exists(path):
+                messagebox.showwarning("Exists", "A file/folder with this name already exists.")
+                return
+            try:
+                os.makedirs(path)
+                self.load_directory()
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
 
 if __name__ == "__main__":
     username = sys.argv[1] if len(sys.argv) > 1 else "guest"
