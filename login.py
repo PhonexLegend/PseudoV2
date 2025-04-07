@@ -3,6 +3,8 @@ from tkinter import messagebox
 import os
 import subprocess
 import sys
+import threading
+import platform
 
 USER_FILE = "users.txt"
 USER_DIR = "users"
@@ -13,7 +15,6 @@ class LoginScreen:
         self.root.title("PseudoOS Login")
         self.root.attributes("-fullscreen", True)
         self.root.configure(bg="black")
-
         self.root.option_add("*Font", ("Courier New", 18))
         self.build_ui()
 
@@ -30,19 +31,13 @@ class LoginScreen:
         button_frame = tk.Frame(frame, bg="black")
         button_frame.pack(pady=30)
 
-        login_btn = tk.Button(button_frame, text="Login", width=15, command=self.login, bg="black", fg="#00FF00")
-        login_btn.grid(row=0, column=0, padx=10)
-
-        register_btn = tk.Button(button_frame, text="Create Account", width=15, command=self.register, bg="black", fg="#00FF00")
-        register_btn.grid(row=0, column=1, padx=10)
-
-        exit_btn = tk.Button(button_frame, text="Exit", width=15, command=self.root.destroy, bg="black", fg="#00FF00")
-        exit_btn.grid(row=0, column=2, padx=10)
+        tk.Button(button_frame, text="Login", width=15, command=self.login, bg="black", fg="#00FF00").grid(row=0, column=0, padx=10)
+        tk.Button(button_frame, text="Create Account", width=15, command=self.register, bg="black", fg="#00FF00").grid(row=0, column=1, padx=10)
+        tk.Button(button_frame, text="Exit", width=15, command=self.root.destroy, bg="black", fg="#00FF00").grid(row=0, column=2, padx=10)
 
     def create_labeled_entry(self, parent, label, show=None):
         frame = tk.Frame(parent, bg="black")
         frame.pack(pady=10)
-
         tk.Label(frame, text=label, fg="#00FF00", bg="black").pack(side="left", padx=10)
         entry = tk.Entry(frame, show=show, bg="black", fg="#00FF00", insertbackground="#00FF00")
         entry.pack(side="left", padx=10)
@@ -51,6 +46,7 @@ class LoginScreen:
     def login(self):
         username = self.username_entry.get().strip()
         password = self.password_entry.get().strip()
+
         if not os.path.exists(USER_FILE):
             messagebox.showerror("Error", "No accounts found. Please create one.")
             return
@@ -88,12 +84,18 @@ class LoginScreen:
 
     def launch_desktop(self, username):
         desktop_script = os.path.join(os.path.dirname(__file__), "desktop.py")
-        python_exec = "python3" if sys.platform != "win32" else "python"
-        try:
-            subprocess.Popen([python_exec, desktop_script, username])
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to launch desktop: {e}")
-        self.root.destroy()
+
+        if platform.system() == "Windows":
+            subprocess.Popen(["python", desktop_script, username], creationflags=subprocess.CREATE_NEW_CONSOLE)
+        else:
+            subprocess.Popen(["python3", desktop_script, username],
+                             stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL,
+                             stdin=subprocess.DEVNULL,
+                             start_new_session=True)
+
+        # Wait a bit for the desktop to appear then exit login.py
+        self.root.after(2000, lambda: sys.exit(0))
 
 if __name__ == "__main__":
     root = tk.Tk()

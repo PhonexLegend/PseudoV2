@@ -4,6 +4,7 @@ import subprocess
 import time
 import os
 import sys
+import datetime
 
 class DesktopShell:
     def __init__(self, root, username):
@@ -23,14 +24,19 @@ class DesktopShell:
 
         self.clock_label = tk.Label(self.taskbar, fg="#0f0", bg="#222", font=("Courier New", 14))
         self.clock_label.pack(side="right", padx=10)
+
+        self.date_label = tk.Label(self.taskbar, fg="#0f0", bg="#222", font=("Courier New", 14))
+        self.date_label.pack(side="right", padx=10)
+
         self.update_clock()
 
     def create_desktop_icons(self):
         icons = [
             ("My Computer", self.open_file_explorer),
-            ("Terminal", lambda: print("Terminal placeholder")),
+            ("Terminal", self.launch_terminal),
             ("Notes", self.launch_notes),
             ("Calculator", self.launch_calculator),
+            ("Snake Game", self.launch_snake),
             ("Shutdown", self.shutdown_system)
         ]
 
@@ -49,8 +55,11 @@ class DesktopShell:
             btn.place(x=40, y=40 + i * 80, width=160, height=60)
 
     def update_clock(self):
-        current_time = time.strftime("%H:%M:%S")
+        now = datetime.datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+        current_date = now.strftime("%A, %d %B %Y")
         self.clock_label.config(text=current_time)
+        self.date_label.config(text=current_date)
         self.root.after(1000, self.update_clock)
 
     def launch_calculator(self):
@@ -62,13 +71,18 @@ class DesktopShell:
             args.append(file_path)
         subprocess.Popen(args)
 
+    def launch_terminal(self):
+        subprocess.Popen(["python3", "terminal.py", self.username])
+
+    def launch_snake(self):
+        subprocess.Popen(["python3", "snake.py", self.username])
+
     def open_file_explorer(self):
         subprocess.Popen(["python3", "my_computer.py", self.username])
 
     def shutdown_system(self):
-        if messagebox.askyesno("Shutdown", "Are you sure you want to shut down?"):
-            self.root.destroy()
-            subprocess.call(["python3", "shutdown.py"])
+        subprocess.Popen(["python3", "shutdown.py", self.username])
+        self.root.after(2000, self.root.destroy)
 
 if __name__ == "__main__":
     username = sys.argv[1] if len(sys.argv) > 1 else "guest"

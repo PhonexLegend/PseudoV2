@@ -21,8 +21,12 @@ class Calculator:
 
         self.expression = ""
         self.build_ui()
+        self.update_clock()
 
     def build_ui(self):
+        self.clock_label = tk.Label(self.root, font=("Courier New", 14), fg="#00FF00", bg="black")
+        self.clock_label.pack(pady=10)
+
         self.display = tk.Entry(self.root, font=("Courier New", 24), bg="black", fg="#00FF00",
                                 insertbackground="#00FF00", justify="right")
         self.display.pack(fill="x", padx=10, pady=20)
@@ -56,6 +60,11 @@ class Calculator:
         self.history_box.config(state="disabled")
 
         self.load_history()
+
+    def update_clock(self):
+        current_time = time.strftime("%a, %Y-%m-%d %H:%M:%S")
+        self.clock_label.config(text=current_time)
+        self.root.after(1000, self.update_clock)
 
     def button_press(self, char):
         if char == "=":
@@ -91,8 +100,8 @@ class Calculator:
     def calculate(self):
         try:
             result = str(eval(self.expression))
-            timestamp = time.strftime("[%H:%M:%S]")
-            entry = f"{timestamp} {self.expression} = {result}"
+            timestamp = time.strftime("%a %Y-%m-%d %H:%M:%S")
+            entry = f"{timestamp}: {self.expression} = {result}"
             self.history.append(entry)
             self.save_history(entry)
             self.update_history_box(entry)
@@ -138,4 +147,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = Calculator(root, username)
     root.mainloop()
-

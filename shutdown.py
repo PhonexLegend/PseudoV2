@@ -1,54 +1,78 @@
 import tkinter as tk
 import time
-import random
-
-shutdown_messages = [
-    "[INFO] Saving session...",
-    "[INFO] Unmounting drives...",
-    "[INFO] Stopping services...",
-    "[OK] Service manager shutdown complete.",
-    "[INFO] Flushing write buffers...",
-    "[OK] All data written to disk.",
-    "[INFO] Logging out user...",
-    "[OK] User session terminated.",
-    "[INFO] Powering off network interfaces...",
-    "[OK] Network interfaces disabled.",
-    "[INFO] Terminating background processes...",
-    "[OK] All processes have exited.",
-    "[INFO] Shutting down core modules...",
-    "[INFO] Disabling graphical interface...",
-    "[OK] Display server stopped.",
-    "[INFO] Halting system...",
-    "[OK] Shutdown sequence complete."
-]
+import os
+import signal
+import sys
 
 class ShutdownScreen:
-    def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("Shutting Down...")
-        self.root.configure(bg="black")
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Shutting Down")
         self.root.attributes("-fullscreen", True)
+        self.root.configure(bg="black")
 
-        self.text_widget = tk.Text(self.root, bg="black", fg="#0f0", font=("Courier New", 12))
-        self.text_widget.pack(fill="both", expand=True)
-        self.text_widget.config(state="disabled")
+        self.label = tk.Label(self.root, text="System Shutting Down...",
+                              font=("Courier New", 32), fg="#00FF00", bg="black")
+        self.label.pack(pady=100)
 
-        self.index = 0
-        self.show_next_message()
+        self.text = tk.Text(self.root, font=("Courier New", 14),
+                            bg="black", fg="#00FF00", height=25, width=100, bd=0)
+        self.text.pack()
+        self.text.configure(state="disabled")
 
-        self.root.mainloop()
+        self.shutdown_sequence()
 
-    def show_next_message(self):
-        if self.index < len(shutdown_messages):
-            msg = shutdown_messages[self.index]
-            self.text_widget.config(state="normal")
-            self.text_widget.insert(tk.END, msg + "\n")
-            self.text_widget.see(tk.END)
-            self.text_widget.config(state="disabled")
-            self.index += 1
-            self.root.after(random.randint(200, 500), self.show_next_message)
-        else:
-            self.root.after(1000, self.root.destroy)
+    def shutdown_sequence(self):
+        messages = [
+            "[ OK ] Closing active applications...",
+            "[ OK ] Sending shutdown signals...",
+            "[ OK ] Saving user session...",
+            "[ OK ] Unmounting virtual drives...",
+            "[ OK ] Disconnecting peripherals...",
+            "[ OK ] Terminating session handlers...",
+            "[ OK ] Killing orphan processes...",
+            "[ OK ] Writing system logs...",
+            "[ OK ] Stopping background daemons...",
+            "[ OK ] Releasing memory buffers...",
+            "[ OK ] Cleaning up temporary files...",
+            "[ OK ] Disabling user input...",
+            "[ OK ] Flushing DNS cache...",
+            "[ OK ] Terminating display server...",
+            "[ OK ] Logging out...",
+            "[ OK ] Powering down network interfaces...",
+            "[ OK ] Resetting hardware states...",
+            "[ OK ] Halting kernel modules...",
+            "[ OK ] Shutting down power management...",
+            "[ OK ] Stopping clock daemon...",
+            "[ OK ] Syncing system time...",
+            "[ OK ] De-initializing device tree...",
+            "[ OK ] Finalizing shutdown tasks...",
+            "[ OK ] Compressing memory swap...",
+            "[ OK ] Power circuits disengaged...",
+            "[ OK ] CPU halted...",
+            "[ OK ] PseudoOS safely halted."
+        ]
+
+        def show_next(index=0):
+            if index < len(messages):
+                self.text.configure(state="normal")
+                self.text.insert(tk.END, messages[index] + "\n")
+                self.text.see(tk.END)
+                self.text.configure(state="disabled")
+                self.root.after(300, show_next, index + 1)
+            else:
+                self.terminate()
+
+        show_next()
+
+    def terminate(self):
+        time.sleep(1)
+        # Kill the entire process group (not just this script)
+        os.killpg(os.getpgid(os.getpid()), signal.SIGTERM)
 
 if __name__ == "__main__":
-    ShutdownScreen()
+    # Make sure this script runs in its own process group
+    os.setpgrp()
+    root = tk.Tk()
+    app = ShutdownScreen(root)
+    root.mainloop()
