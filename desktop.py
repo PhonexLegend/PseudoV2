@@ -32,6 +32,7 @@ class Desktop:
         self.create_icon(icon_frame, "Pong Game", self.launch_pong)
         self.create_icon(icon_frame, "Tetris", self.launch_tetris)
         self.create_icon(icon_frame, "Path Finder", self.launch_pathfinder)
+        self.create_icon(icon_frame, "Maze", self.launch_maze)  # NEW LINE
 
     def create_icon(self, parent, name, command):
         btn = tk.Button(parent, text=name, width=20, height=2, 
@@ -63,7 +64,6 @@ class Desktop:
         python_exec = "python3" if sys.platform != "win32" else "python"
         subprocess.Popen([python_exec, script_path, self.username])
 
-    # Rest of the launch methods remain unchanged
     def launch_my_computer(self): self.launch_script("my_computer.py")
     def launch_calculator(self): self.launch_script("calculator.py")
     def launch_terminal(self): self.launch_script("terminal.py")
@@ -72,6 +72,7 @@ class Desktop:
     def launch_pong(self): self.launch_script("pong.py")
     def launch_tetris(self): self.launch_script("tetris.py")
     def launch_pathfinder(self): self.launch_script("pathfinder.py")
+    def launch_maze(self): self.launch_script("maze.py")  # NEW LINE
 
     def shutdown(self):
         shutdown_script = os.path.join(os.path.dirname(__file__), "shutdown.py")
