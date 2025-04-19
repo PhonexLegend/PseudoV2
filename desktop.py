@@ -1,5 +1,4 @@
 import tkinter as tk
-import time
 import os
 import subprocess
 import sys
@@ -31,19 +30,23 @@ class Desktop:
         self.create_icon(icon_frame, "Notes", self.launch_notes)
         self.create_icon(icon_frame, "Snake Game", self.launch_snake)
         self.create_icon(icon_frame, "Pong Game", self.launch_pong)
-        self.create_icon(icon_frame, "Tetris", self.launch_tetris)  # ✅ Tetris added here
+        self.create_icon(icon_frame, "Tetris", self.launch_tetris)
+        self.create_icon(icon_frame, "Path Finder", self.launch_pathfinder)
 
     def create_icon(self, parent, name, command):
-        btn = tk.Button(parent, text=name, width=20, height=2, bg="black", fg="#00FF00",
-                        activebackground="black", activeforeground="#00FF00", command=command)
+        btn = tk.Button(parent, text=name, width=20, height=2, 
+                      bg="black", fg="#00FF00", activebackground="black",
+                      activeforeground="#00FF00", command=command)
         btn.pack(anchor="w", pady=10)
 
     def create_taskbar(self):
         self.taskbar = tk.Frame(self.root, bg="black")
         self.taskbar.pack(side="bottom", fill="x")
 
-        self.shutdown_btn = tk.Button(self.taskbar, text="Shutdown", command=self.shutdown,
-                                      bg="black", fg="#00FF00", activebackground="black", activeforeground="#00FF00")
+        self.shutdown_btn = tk.Button(self.taskbar, text="Shutdown", 
+                                    command=self.shutdown, bg="black",
+                                    fg="#00FF00", activebackground="black",
+                                    activeforeground="#00FF00")
         self.shutdown_btn.pack(side="left", padx=10, pady=5)
 
         self.clock_label = tk.Label(self.taskbar, fg="#00FF00", bg="black")
@@ -55,46 +58,29 @@ class Desktop:
         self.clock_label.config(text=time_str)
         self.root.after(1000, self.update_clock)
 
-    # ------------------ LAUNCH METHODS ------------------
-
     def launch_script(self, script_name):
         script_path = os.path.join(os.path.dirname(__file__), script_name)
         python_exec = "python3" if sys.platform != "win32" else "python"
         subprocess.Popen([python_exec, script_path, self.username])
 
-    def launch_my_computer(self):
-        self.launch_script("my_computer.py")
-
-    def launch_calculator(self):
-        self.launch_script("calculator.py")
-
-    def launch_terminal(self):
-        self.launch_script("terminal.py")
-
-    def launch_notes(self):
-        self.launch_script("notes.py")
-
-    def launch_snake(self):
-        self.launch_script("snake.py")
-
-    def launch_pong(self):
-        self.launch_script("pong.py")
-
-    def launch_tetris(self):  # ✅ Tetris launcher
-        self.launch_script("tetris.py")
-
-    # ------------------ SHUTDOWN ------------------
+    # Rest of the launch methods remain unchanged
+    def launch_my_computer(self): self.launch_script("my_computer.py")
+    def launch_calculator(self): self.launch_script("calculator.py")
+    def launch_terminal(self): self.launch_script("terminal.py")
+    def launch_notes(self): self.launch_script("notes.py")
+    def launch_snake(self): self.launch_script("snake.py")
+    def launch_pong(self): self.launch_script("pong.py")
+    def launch_tetris(self): self.launch_script("tetris.py")
+    def launch_pathfinder(self): self.launch_script("pathfinder.py")
 
     def shutdown(self):
         shutdown_script = os.path.join(os.path.dirname(__file__), "shutdown.py")
         python_exec = "python3" if sys.platform != "win32" else "python"
         try:
             subprocess.Popen([python_exec, shutdown_script])
-            self.root.after(2000, lambda: os._exit(0))  # Exit after 2 seconds
+            self.root.after(2000, lambda: os._exit(0))
         except Exception as e:
             print(f"Shutdown failed: {e}")
-
-# ------------------ MAIN ------------------
 
 if __name__ == "__main__":
     username = sys.argv[1] if len(sys.argv) > 1 else "guest"
